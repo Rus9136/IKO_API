@@ -21,6 +21,7 @@ class IKODocumentSchema(Schema):
     unit_of_measure_iko = fields.String(required=True, validate=validate.Length(max=20))
     shift_number_iko = fields.Integer(required=True)
     cash_register_number_iko = fields.String(required=True, validate=validate.Length(max=50))
+    is_processed = fields.Boolean(dump_default=False)
     created_at = fields.DateTime(dump_only=True)
     updated_at = fields.DateTime(dump_only=True)
 

@@ -26,6 +26,7 @@ class IKODocument(db.Model):
     unit_of_measure_iko = db.Column(db.String(20), nullable=False)
     shift_number_iko = db.Column(db.Integer, nullable=False)
     cash_register_number_iko = db.Column(db.String(50), nullable=False)
+    is_processed = db.Column(db.Boolean, nullable=False, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

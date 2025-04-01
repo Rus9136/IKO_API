@@ -1,6 +1,7 @@
 from typing import Dict, List, Optional, Tuple
 from sqlalchemy import or_
 from models.iko_document import db, IKODocument
+from datetime import datetime
 
 class IKODocumentService:
     @staticmethod
@@ -35,6 +36,20 @@ class IKODocumentService:
                     IKODocument.product_name_iko.ilike(f"%{search}%"),
                     IKODocument.document_number_iko.ilike(f"%{search}%")
                 ))
+            if is_processed := filters.get('is_processed'):
+                query = query.filter(IKODocument.is_processed == is_processed)
+            if start_date := filters.get('start_date'):
+                try:
+                    start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+                    query = query.filter(IKODocument.document_date_iko >= start_date)
+                except ValueError:
+                    pass
+            if end_date := filters.get('end_date'):
+                try:
+                    end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+                    query = query.filter(IKODocument.document_date_iko <= end_date)
+                except ValueError:
+                    pass
 
         total = query.count()
         documents = query.order_by(IKODocument.created_at.desc()) \
@@ -51,8 +66,46 @@ class IKODocumentService:
         return document
 
     @staticmethod
-    def delete_document(document_id: int) -> bool:
+    def delete_document(document_id: int) -> None:
         document = IKODocument.query.get_or_404(document_id)
         db.session.delete(document)
         db.session.commit()
-        return True
+
+    @staticmethod
+    def bulk_update_processed_status(document_ids: List[int], is_processed: bool) -> List[IKODocument]:
+        documents = IKODocument.query.filter(IKODocument.id.in_(document_ids)).all()
+        for document in documents:
+            document.is_processed = is_processed
+        db.session.commit()
+        return documents
+
+    @staticmethod
+    def get_statistics() -> Dict:
+        total_documents = IKODocument.query.count()
+        processed_documents = IKODocument.query.filter_by(is_processed=True).count()
+        unprocessed_documents = IKODocument.query.filter_by(is_processed=False).count()
+        
+        today = datetime.utcnow().date()
+        documents_today = IKODocument.query.filter(
+            db.func.date(IKODocument.created_at) == today
+        ).count()
+
+        return {
+            "total_documents": total_documents,
+            "processed_documents": processed_documents,
+            "unprocessed_documents": unprocessed_documents,
+            "documents_today": documents_today
+        }
+
+    @staticmethod
+    def get_documents_by_date_range(start_date: datetime, end_date: datetime, 
+                                  page: int, per_page: int) -> Tuple[List[IKODocument], int]:
+        query = IKODocument.query.filter(
+            IKODocument.document_date_iko.between(start_date, end_date)
+        )
+        
+        total = query.count()
+        documents = query.order_by(IKODocument.document_date_iko.desc()) \
+                       .paginate(page=page, per_page=per_page, error_out=False)
+        
+        return documents.items, total
