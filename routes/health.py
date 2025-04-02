@@ -1,10 +1,14 @@
-from flask import jsonify
+from flask import Blueprint, jsonify
+from models.iko_document import db
+from sqlalchemy import text
 
-@app.route('/health')
+health_bp = Blueprint('health', __name__)
+
+@health_bp.route('/health')
 def health_check():
     try:
-        # Check database connection
-        db.session.execute('SELECT 1')
+        # Правильный способ выполнения запроса в новых версиях SQLAlchemy
+        db.session.execute(text('SELECT 1'))
         return jsonify({
             'status': 'healthy',
             'database': 'connected'

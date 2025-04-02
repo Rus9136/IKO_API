@@ -1,29 +1,63 @@
-
-
-# Environment variables
+# Environment files
 .env
-.env.*
-.env.prod
+*.env
+!.env.example
 
-# Virtual environments
-venv/
-env/
-claude-env/
+# Backup files
+*.bak
+*.gback
+backup_db.sh
+monitor.sh
 
-# Logs
-logs/
+# Logging
 *.log
+logging_config.py
 
-# Docker development files (if you want to exclude them)
-# Dockerfile
-# docker-compose.yml
-
-# Python cache files
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
+env/
+venv/
+.venv/
+pythonenv*
+
+# Virtual Environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Docker
+.docker
+
+# Secrets and Certificates
+*.pem
+*.key
+*.crt
+*.ca-bundle
+*.p12
+
+# Build and distribution
 build/
 develop-eggs/
 dist/
@@ -39,13 +73,11 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
 
-# IDE files
-.idea/
-.vscode/
-*.swp
-*.swo
+# Jupyter Notebook
+.ipynb_checkpoints
 
-# Local deployment directories
-deployment/
-
+# Monitoring and profiling
+*.prof
+*.out
