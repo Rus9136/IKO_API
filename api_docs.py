@@ -72,7 +72,8 @@ statistics_model = api.model('Statistics', {
 
 # Модель для массового создания/обновления документов
 bulk_create_model = api.model('BulkCreate', {
-    'items': fields.List(fields.Nested(document_model), required=True, description='Массив документов для создания/обновления'),
+    'message': fields.String(description='Сообщение о результате операции'),
+    'items': fields.List(fields.Nested(document_model), description='Созданные или обновленные документы'),
     'total': fields.Integer(description='Общее количество обработанных документов')
 })
 
@@ -165,7 +166,13 @@ class AllDocuments(Resource):
 
 @ns.route('/bulk-create')
 class BulkCreateDocuments(Resource):
-    @ns.doc('bulk_create_documents')
+    @ns.doc('bulk_create_documents',
+            description='Массовое создание или обновление документов. Если документ с указанным номером и кодом продукта существует - он будет обновлен, иначе создан новый.',
+            responses={
+                201: 'Документы успешно созданы/обновлены',
+                400: 'Ошибка валидации данных',
+                500: 'Внутренняя ошибка сервера'
+            })
     @ns.expect([document_model])
     @ns.marshal_with(bulk_create_model, code=201)
     def post(self):

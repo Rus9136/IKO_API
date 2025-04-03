@@ -320,3 +320,44 @@ def bulk_create_documents():
             "error": str(e)
         })
         return add_cors_headers(response), 500
+
+@bp.route('/documents/test-bulk-create', methods=['GET', 'OPTIONS'])
+def test_bulk_create():
+    if request.method == 'OPTIONS':
+        response = make_response()
+        return add_cors_headers(response)
+    
+    try:
+        return jsonify({
+            "message": "Bulk create endpoint is available",
+            "endpoint": "/api/v1/documents/bulk-create",
+            "method": "POST",
+            "example_request": {
+                "documents": [
+                    {
+                        "organization": "ИП Ералиева",
+                        "department": "Мадлен Кен Баба",
+                        "document_number_iko": "10010",
+                        "product_code_iko": "09666",
+                        "document_date_iko": "2025-03-01",
+                        "warehouse_iko": "Кен баба",
+                        "warehouse_code_iko": "9",
+                        "operation_iko": "Продажа",
+                        "product_name_iko": "Торт Шоколадно - медовый",
+                        "quantity_iko": 2.056,
+                        "price_with_vat_iko": 4590,
+                        "amount_with_vat_iko": 9437.04,
+                        "vat_amount_iko": 0,
+                        "vat_rate_iko": 0,
+                        "cost_price_per_unit_without_vat_iko": 4590,
+                        "cost_price_without_vat_iko": 9437.04,
+                        "unit_of_measure_iko": "кг",
+                        "shift_number_iko": 10,
+                        "cash_register_number_iko": "2",
+                        "is_processed": False
+                    }
+                ]
+            }
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
