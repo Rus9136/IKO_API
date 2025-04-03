@@ -3,10 +3,6 @@
 *.env
 !.env.example
 
-# Testing
-.coverage
-htmlcov/
-.pytest_cache/
 
 # Backup files
 *.bak
@@ -86,3 +82,7 @@ MANIFEST
 # Monitoring and profiling
 *.prof
 *.out
+
+docker-compose.yml
+deployment/
+Dockerfile

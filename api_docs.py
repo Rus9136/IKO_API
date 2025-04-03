@@ -51,6 +51,17 @@ documents_list_model = api.model('DocumentsList', {
     'pages': fields.Integer(description='Общее количество страниц')
 })
 
+# Модель для массового получения документов
+bulk_get_model = api.model('BulkGet', {
+    'document_ids': fields.List(fields.Integer, required=True, description='Список ID документов для получения')
+})
+
+# Модель для массового обновления статуса
+bulk_update_model = api.model('BulkUpdate', {
+    'document_ids': fields.List(fields.Integer, required=True, description='Список ID документов'),
+    'is_processed': fields.Boolean(required=True, description='Новый статус обработки')
+})
+
 # Модель для статистики
 statistics_model = api.model('Statistics', {
     'total_documents': fields.Integer(description='Общее количество документов'),
@@ -73,12 +84,6 @@ list_parser.add_argument('start_date', type=str, help='Начальная дат
 list_parser.add_argument('end_date', type=str, help='Конечная дата (YYYY-MM-DD)')
 list_parser.add_argument('is_processed', type=bool, help='Фильтр по статусу обработки')
 
-# Модель для массового обновления статуса
-bulk_update_model = api.model('BulkUpdate', {
-    'document_ids': fields.List(fields.Integer, required=True, description='Список ID документов'),
-    'is_processed': fields.Boolean(required=True, description='Новый статус обработки')
-})
-
 @ns.route('/')
 class DocumentList(Resource):
     @ns.doc('list_documents')
@@ -93,6 +98,15 @@ class DocumentList(Resource):
     @ns.marshal_with(document_model, code=201)
     def post(self):
         """Создать новый документ"""
+        pass
+
+@ns.route('/bulk')
+class BulkGetDocuments(Resource):
+    @ns.doc('get_documents_bulk')
+    @ns.expect(bulk_get_model)
+    @ns.marshal_with(documents_list_model)
+    def post(self):
+        """Получить документы по массиву ID"""
         pass
 
 @ns.route('/<int:id>')
@@ -132,4 +146,13 @@ class Statistics(Resource):
     @ns.marshal_with(statistics_model)
     def get(self):
         """Получить статистику по документам"""
+        pass
+
+@ns.route('/all')
+class AllDocuments(Resource):
+    @ns.doc('get_all_documents')
+    @ns.expect(list_parser)
+    @ns.marshal_with(documents_list_model)
+    def get(self):
+        """Получить все документы без пагинации"""
         pass 

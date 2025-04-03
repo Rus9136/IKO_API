@@ -21,21 +21,27 @@ class IKODocumentService:
 
         if filters:
             if organization := filters.get('organization'):
-                query = query.filter(IKODocument.organization.ilike(f"%{organization}%"))
+                query = query.filter(IKODocument.organization.ilike(f'%{organization}%'))
             if department := filters.get('department'):
-                query = query.filter(IKODocument.department.ilike(f"%{department}%"))
-            if document_number := filters.get('document_number_iko'):
-                query = query.filter(IKODocument.document_number_iko.ilike(f"%{document_number}%"))
-            if warehouse := filters.get('warehouse_iko'):
-                query = query.filter(IKODocument.warehouse_iko.ilike(f"%{warehouse}%"))
-            if product_code := filters.get('product_code_iko'):
-                query = query.filter(IKODocument.product_code_iko.ilike(f"%{product_code}%"))
+                query = query.filter(IKODocument.department.ilike(f'%{department}%'))
+            if document_number := filters.get('document_number'):
+                query = query.filter(IKODocument.document_number_iko.ilike(f'%{document_number}%'))
+            if warehouse := filters.get('warehouse'):
+                query = query.filter(IKODocument.warehouse_iko.ilike(f'%{warehouse}%'))
+            if product_code := filters.get('product_code'):
+                query = query.filter(IKODocument.product_code_iko.ilike(f'%{product_code}%'))
             if search := filters.get('search'):
-                query = query.filter(or_(
-                    IKODocument.organization.ilike(f"%{search}%"),
-                    IKODocument.product_name_iko.ilike(f"%{search}%"),
-                    IKODocument.document_number_iko.ilike(f"%{search}%")
-                ))
+                search_term = f'%{search}%'
+                query = query.filter(
+                    db.or_(
+                        IKODocument.organization.ilike(search_term),
+                        IKODocument.department.ilike(search_term),
+                        IKODocument.document_number_iko.ilike(search_term),
+                        IKODocument.warehouse_iko.ilike(search_term),
+                        IKODocument.product_code_iko.ilike(search_term),
+                        IKODocument.product_name_iko.ilike(search_term)
+                    )
+                )
             if is_processed := filters.get('is_processed'):
                 query = query.filter(IKODocument.is_processed == is_processed)
             if start_date := filters.get('start_date'):
@@ -56,6 +62,11 @@ class IKODocumentService:
                        .paginate(page=page, per_page=per_page, error_out=False)
         
         return documents.items, total
+
+    @staticmethod
+    def get_documents_by_ids(document_ids: List[int]) -> List[IKODocument]:
+        """Получение документов по массиву ID"""
+        return IKODocument.query.filter(IKODocument.id.in_(document_ids)).all()
 
     @staticmethod
     def update_document(document_id: int, data: Dict) -> IKODocument:
@@ -109,3 +120,48 @@ class IKODocumentService:
                        .paginate(page=page, per_page=per_page, error_out=False)
         
         return documents.items, total
+
+    @staticmethod
+    def get_all_documents(filters: Dict = None) -> List[IKODocument]:
+        """Получение всех документов без пагинации"""
+        query = IKODocument.query
+
+        if filters:
+            if organization := filters.get('organization'):
+                query = query.filter(IKODocument.organization.ilike(f'%{organization}%'))
+            if department := filters.get('department'):
+                query = query.filter(IKODocument.department.ilike(f'%{department}%'))
+            if document_number := filters.get('document_number'):
+                query = query.filter(IKODocument.document_number_iko.ilike(f'%{document_number}%'))
+            if warehouse := filters.get('warehouse'):
+                query = query.filter(IKODocument.warehouse_iko.ilike(f'%{warehouse}%'))
+            if product_code := filters.get('product_code'):
+                query = query.filter(IKODocument.product_code_iko.ilike(f'%{product_code}%'))
+            if search := filters.get('search'):
+                search_term = f'%{search}%'
+                query = query.filter(
+                    db.or_(
+                        IKODocument.organization.ilike(search_term),
+                        IKODocument.department.ilike(search_term),
+                        IKODocument.document_number_iko.ilike(search_term),
+                        IKODocument.warehouse_iko.ilike(search_term),
+                        IKODocument.product_code_iko.ilike(search_term),
+                        IKODocument.product_name_iko.ilike(search_term)
+                    )
+                )
+            if is_processed := filters.get('is_processed'):
+                query = query.filter(IKODocument.is_processed == is_processed)
+            if start_date := filters.get('start_date'):
+                try:
+                    start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+                    query = query.filter(IKODocument.document_date_iko >= start_date)
+                except ValueError:
+                    pass
+            if end_date := filters.get('end_date'):
+                try:
+                    end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+                    query = query.filter(IKODocument.document_date_iko <= end_date)
+                except ValueError:
+                    pass
+
+        return query.order_by(IKODocument.created_at.desc()).all()

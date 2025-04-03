@@ -1,6 +1,6 @@
 import requests
 from datetime import date
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 import json
 
 class IKOApiClient:
@@ -23,6 +23,12 @@ class IKOApiClient:
         response.raise_for_status()
         return response.json()
 
+    def get_documents_bulk(self, document_ids: List[int]) -> Dict:
+        """Get multiple documents by their IDs in a single request."""
+        response = requests.post(f"{self.base_url}/documents/bulk", json={'document_ids': document_ids})
+        response.raise_for_status()
+        return response.json()
+
     def get_document(self, document_id: int) -> Dict:
         """Get a single IKO document by ID."""
         response = requests.get(f"{self.base_url}/documents/{document_id}")
@@ -39,6 +45,16 @@ class IKOApiClient:
         """Delete an IKO document."""
         response = requests.delete(f"{self.base_url}/documents/{document_id}")
         response.raise_for_status()
+
+    def get_all_documents(self, filters: Optional[Dict] = None) -> Dict:
+        """Get all IKO documents without pagination."""
+        params = {}
+        if filters:
+            params.update(filters)
+        
+        response = requests.get(f"{self.base_url}/documents/all", params=params)
+        response.raise_for_status()
+        return response.json()
 
 def main():
     # Create API client instance

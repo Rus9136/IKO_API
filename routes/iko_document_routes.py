@@ -191,3 +191,65 @@ def get_documents_by_date_range():
     except Exception as e:
         response = jsonify({"message": "An error occurred", "error": str(e)})
         return add_cors_headers(response), 500
+
+@bp.route('/documents/bulk', methods=['POST', 'OPTIONS'])
+def get_documents_bulk():
+    if request.method == 'OPTIONS':
+        response = make_response()
+        return add_cors_headers(response)
+        
+    try:
+        data = request.json
+        if not data or 'document_ids' not in data:
+            response = jsonify({"message": "document_ids is required"})
+            return add_cors_headers(response), 400
+            
+        document_ids = data['document_ids']
+        if not isinstance(document_ids, list):
+            response = jsonify({"message": "document_ids must be an array"})
+            return add_cors_headers(response), 400
+            
+        documents = IKODocumentService.get_documents_by_ids(document_ids)
+        response = jsonify({
+            'items': iko_documents_schema.dump(documents),
+            'total': len(documents)
+        })
+        return add_cors_headers(response)
+    except Exception as e:
+        logger.error(f"Error getting documents bulk: {str(e)}", exc_info=True)
+        response = jsonify({"message": "An error occurred", "error": str(e)})
+        return add_cors_headers(response), 500
+
+@bp.route('/documents/all', methods=['GET', 'OPTIONS'])
+def get_all_documents():
+    if request.method == 'OPTIONS':
+        response = make_response()
+        return add_cors_headers(response)
+        
+    try:
+        filters = {
+            'organization': request.args.get('organization'),
+            'department': request.args.get('department'),
+            'document_number': request.args.get('document_number'),
+            'warehouse': request.args.get('warehouse'),
+            'product_code': request.args.get('product_code'),
+            'search': request.args.get('search'),
+            'start_date': request.args.get('start_date'),
+            'end_date': request.args.get('end_date'),
+            'is_processed': request.args.get('is_processed')
+        }
+        # Remove None values
+        filters = {k: v for k, v in filters.items() if v is not None}
+        
+        logger.debug(f"Applied filters: {filters}")
+        documents = IKODocumentService.get_all_documents(filters)
+        
+        response = jsonify({
+            'items': iko_documents_schema.dump(documents),
+            'total': len(documents)
+        })
+        return add_cors_headers(response)
+    except Exception as e:
+        logger.error(f"Error getting all documents: {str(e)}", exc_info=True)
+        response = jsonify({"message": "An error occurred", "error": str(e)})
+        return add_cors_headers(response), 500
