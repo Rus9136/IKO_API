@@ -134,8 +134,12 @@ def bulk_process_documents():
         
     try:
         data = request.json
-        document_ids = data.get('document_ids', [])
-        is_processed = data.get('is_processed', True)
+        if isinstance(data, list):
+            document_ids = data
+            is_processed = True
+        else:
+            document_ids = data.get('document_ids', [])
+            is_processed = data.get('is_processed', True)
         
         documents = IKODocumentService.bulk_update_processed_status(document_ids, is_processed)
         response = jsonify({
