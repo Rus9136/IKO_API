@@ -126,6 +126,21 @@ def delete_document(document_id):
         response = jsonify({"message": "An error occurred", "error": str(e)})
         return add_cors_headers(response), 500
 
+@bp.route('/documents/test', methods=['POST', 'OPTIONS'])
+def test_endpoint():
+    if request.method == 'OPTIONS':
+        response = make_response()
+        return add_cors_headers(response)
+    
+    try:
+        data = request.json
+        return jsonify({
+            "received_data": data,
+            "data_type": str(type(data))
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @bp.route('/documents/bulk-process', methods=['POST', 'OPTIONS'])
 def bulk_process_documents():
     if request.method == 'OPTIONS':
