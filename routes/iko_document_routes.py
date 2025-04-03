@@ -18,6 +18,54 @@ def add_cors_headers(response):
     response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
     return response
 
+@bp.route('/documents/bulk-create', methods=['POST', 'OPTIONS'], endpoint='bulk_create_docs')
+def bulk_create_documents_handler():
+    if request.method == 'OPTIONS':
+        response = make_response()
+        return add_cors_headers(response)
+        
+    try:
+        # Проверяем, что данные пришли в виде массива
+        if not isinstance(request.json, list):
+            response = jsonify({
+                "message": "Request body must be an array of documents",
+                "error": "Invalid request format"
+            })
+            return add_cors_headers(response), 400
+
+        # Валидируем каждый документ в массиве
+        validated_documents = []
+        for doc_data in request.json:
+            try:
+                validated_data = iko_document_schema.load(doc_data)
+                validated_documents.append(validated_data)
+            except ValidationError as e:
+                logger.error(f"Validation error for document: {e.messages}")
+                response = jsonify({
+                    "message": "Validation error",
+                    "errors": e.messages,
+                    "document": doc_data
+                })
+                return add_cors_headers(response), 400
+
+        # Создаем или обновляем документы
+        documents = IKODocumentService.bulk_create_or_update_documents(validated_documents)
+        
+        response = jsonify({
+            'message': 'Documents processed successfully',
+            'items': iko_documents_schema.dump(documents),
+            'total': len(documents)
+        })
+        return add_cors_headers(response), 201
+
+    except Exception as e:
+        logger.error(f"Error in bulk create/update: {str(e)}", exc_info=True)
+        response = jsonify({
+            "message": "An error occurred while processing documents",
+            "error": str(e)
+        })
+        return add_cors_headers(response), 500
+
 @bp.route('/documents', methods=['POST', 'OPTIONS'])
 def create_document():
     if request.method == 'OPTIONS':
@@ -80,6 +128,21 @@ def get_documents():
         response = jsonify({"message": "An error occurred", "error": str(e)})
         return add_cors_headers(response), 500
 
+@bp.route('/documents/test', methods=['POST', 'OPTIONS'])
+def test_endpoint():
+    if request.method == 'OPTIONS':
+        response = make_response()
+        return add_cors_headers(response)
+    
+    try:
+        data = request.json
+        return jsonify({
+            "received_data": data,
+            "data_type": str(type(data))
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @bp.route('/documents/<int:document_id>', methods=['GET', 'OPTIONS'])
 def get_document(document_id):
     if request.method == 'OPTIONS':
@@ -125,9 +188,6 @@ def delete_document(document_id):
     except Exception as e:
         response = jsonify({"message": "An error occurred", "error": str(e)})
         return add_cors_headers(response), 500
-
-@bp.route('/documents/test', methods=['POST', 'OPTIONS'])
-def test_endpoint():
     if request.method == 'OPTIONS':
         response = make_response()
         return add_cors_headers(response)
@@ -273,53 +333,6 @@ def get_all_documents():
         response = jsonify({"message": "An error occurred", "error": str(e)})
         return add_cors_headers(response), 500
 
-@bp.route('/documents/bulk-create', methods=['POST', 'OPTIONS'])
-def bulk_create_documents():
-    if request.method == 'OPTIONS':
-        response = make_response()
-        return add_cors_headers(response)
-        
-    try:
-        # Проверяем, что данные пришли в виде массива
-        if not isinstance(request.json, list):
-            response = jsonify({
-                "message": "Request body must be an array of documents",
-                "error": "Invalid request format"
-            })
-            return add_cors_headers(response), 400
-
-        # Валидируем каждый документ в массиве
-        validated_documents = []
-        for doc_data in request.json:
-            try:
-                validated_data = iko_document_schema.load(doc_data)
-                validated_documents.append(validated_data)
-            except ValidationError as e:
-                logger.error(f"Validation error for document: {e.messages}")
-                response = jsonify({
-                    "message": "Validation error",
-                    "errors": e.messages,
-                    "document": doc_data
-                })
-                return add_cors_headers(response), 400
-
-        # Создаем или обновляем документы
-        documents = IKODocumentService.bulk_create_or_update_documents(validated_documents)
-        
-        response = jsonify({
-            'message': 'Documents processed successfully',
-            'items': iko_documents_schema.dump(documents),
-            'total': len(documents)
-        })
-        return add_cors_headers(response), 201
-
-    except Exception as e:
-        logger.error(f"Error in bulk create/update: {str(e)}", exc_info=True)
-        response = jsonify({
-            "message": "An error occurred while processing documents",
-            "error": str(e)
-        })
-        return add_cors_headers(response), 500
 
 @bp.route('/documents/test-bulk-create', methods=['GET', 'OPTIONS'])
 def test_bulk_create():

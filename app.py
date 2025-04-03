@@ -1,11 +1,10 @@
 from flask import Flask, redirect
 from flask_cors import CORS
 from models.iko_document import db
-from routes.iko_document_routes import bp as iko_bp
-from api_docs import api_bp
 from config import Config
 from sqlalchemy import inspect
 from logging_config import configure_logging
+from api_docs import api_bp
 
 def create_app(config_class=Config):
     app = Flask(__name__)
@@ -20,7 +19,13 @@ def create_app(config_class=Config):
     # Initialize extensions
     db.init_app(app)
 
-    # Register blueprints
+    # Перезагрузка модулей для уверенности в актуальности данных
+    import importlib
+    import routes.iko_document_routes
+    importlib.reload(routes.iko_document_routes)
+    from routes.iko_document_routes import bp as iko_bp
+
+    # Register blueprints - важно, статические маршруты регистрируются перед динамическими
     app.register_blueprint(iko_bp, url_prefix='/api/v1')
     app.register_blueprint(api_bp)
     
@@ -44,6 +49,11 @@ def create_app(config_class=Config):
             db.create_all()
         else:
             app.logger.info("Таблицы уже существуют, пропускаем создание")
+    
+    # Вывод всех зарегистрированных маршрутов для отладки
+    app.logger.info("Зарегистрированные маршруты:")
+    for rule in sorted(app.url_map.iter_rules(), key=lambda x: str(x)):
+        app.logger.info(f"Route: {rule.rule} -> {rule.endpoint}")
 
     return app
 
