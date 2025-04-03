@@ -148,6 +148,14 @@ class IKODocumentService:
         return documents.items, total
 
     @staticmethod
+    def get_document_by_number_and_product(document_number: str, product_code: str) -> Optional[IKODocument]:
+        """Получение документа по номеру документа и коду продукта"""
+        return IKODocument.query.filter_by(
+            document_number_iko=document_number,
+            product_code_iko=product_code
+        ).first()
+
+    @staticmethod
     def get_all_documents(filters: Dict = None) -> List[IKODocument]:
         """Получение всех документов без пагинации"""
         query = IKODocument.query

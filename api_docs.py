@@ -177,4 +177,48 @@ class BulkCreateDocuments(Resource):
     @ns.marshal_with(bulk_create_model, code=201)
     def post(self):
         """Массовое создание или обновление документов"""
-        pass 
+        from flask import request
+        from services.iko_document_service import IKODocumentService
+        from schemas.iko_document_schema import iko_document_schema, iko_documents_schema
+        from marshmallow import ValidationError
+        import logging
+        
+        logger = logging.getLogger(__name__)
+        
+        try:
+            # Проверяем, что данные пришли в виде массива
+            if not isinstance(request.json, list):
+                return {
+                    "message": "Request body must be an array of documents",
+                    "error": "Invalid request format"
+                }, 400
+
+            # Валидируем каждый документ в массиве
+            validated_documents = []
+            for doc_data in request.json:
+                try:
+                    validated_data = iko_document_schema.load(doc_data)
+                    validated_documents.append(validated_data)
+                except ValidationError as e:
+                    logger.error(f"Validation error for document: {e.messages}")
+                    return {
+                        "message": "Validation error",
+                        "errors": e.messages,
+                        "document": doc_data
+                    }, 400
+
+            # Создаем или обновляем документы
+            documents = IKODocumentService.bulk_create_or_update_documents(validated_documents)
+            
+            return {
+                'message': 'Documents processed successfully',
+                'items': iko_documents_schema.dump(documents),
+                'total': len(documents)
+            }, 201
+
+        except Exception as e:
+            logger.error(f"Error in bulk create/update: {str(e)}", exc_info=True)
+            return {
+                "message": "An error occurred while processing documents",
+                "error": str(e)
+            }, 500
