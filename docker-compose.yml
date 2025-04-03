@@ -1,5 +1,4 @@
 version: '3.8'
-
 services:
   api:
     build: .
@@ -26,7 +25,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-
   db:
     image: postgres:15-alpine
     container_name: iko_db
@@ -50,17 +48,18 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-
   nginx:
     image: nginx:alpine
     container_name: iko_nginx
     restart: unless-stopped
     ports:
       - "80:80"
+      - "443:443"
     volumes:
       - ./deployment/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./deployment/nginx/conf.d:/etc/nginx/conf.d:ro
       - ./logs/nginx:/var/log/nginx
+      - /etc/letsencrypt:/etc/letsencrypt:ro
     networks:
       - iko_network
     depends_on:
@@ -70,11 +69,18 @@ services:
         limits:
           cpus: '0.5'
           memory: 512M
-
+  certbot:
+    image: certbot/certbot
+    container_name: iko_certbot
+    restart: unless-stopped
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt
+      - ./logs/certbot:/var/log/letsencrypt
+    networks:
+      - iko_network
 volumes:
   postgres_data:
     driver: local
-
 networks:
   iko_network:
     driver: bridge
