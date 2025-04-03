@@ -12,7 +12,6 @@ monitor.sh
 
 # Logging
 *.log
-logging_config.py
 
 # Python
 __pycache__/
