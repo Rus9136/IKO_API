@@ -56,6 +56,12 @@ class IKOApiClient:
         response.raise_for_status()
         return response.json()
 
+    def bulk_create_documents(self, documents: List[Dict]) -> Dict:
+        """Create or update multiple documents in a single request."""
+        response = requests.post(f"{self.base_url}/documents/bulk-create", json=documents)
+        response.raise_for_status()
+        return response.json()
+
 def main():
     # Create API client instance
     client = IKOApiClient()

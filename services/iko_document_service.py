@@ -12,6 +12,32 @@ class IKODocumentService:
         return document
 
     @staticmethod
+    def bulk_create_or_update_documents(documents_data: List[Dict]) -> List[IKODocument]:
+        """Массовое создание или обновление документов"""
+        result_documents = []
+        
+        for data in documents_data:
+            # Поиск существующего документа по комбинации document_number_iko и product_code_iko
+            existing_document = IKODocument.query.filter_by(
+                document_number_iko=data['document_number_iko'],
+                product_code_iko=data['product_code_iko']
+            ).first()
+            
+            if existing_document:
+                # Обновляем существующий документ
+                for key, value in data.items():
+                    setattr(existing_document, key, value)
+                result_documents.append(existing_document)
+            else:
+                # Создаем новый документ
+                new_document = IKODocument(**data)
+                db.session.add(new_document)
+                result_documents.append(new_document)
+        
+        db.session.commit()
+        return result_documents
+
+    @staticmethod
     def get_document(document_id: int) -> Optional[IKODocument]:
         return IKODocument.query.get_or_404(document_id)
 

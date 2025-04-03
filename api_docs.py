@@ -70,6 +70,12 @@ statistics_model = api.model('Statistics', {
     'documents_today': fields.Integer(description='Количество документов за сегодня')
 })
 
+# Модель для массового создания/обновления документов
+bulk_create_model = api.model('BulkCreate', {
+    'items': fields.List(fields.Nested(document_model), required=True, description='Массив документов для создания/обновления'),
+    'total': fields.Integer(description='Общее количество обработанных документов')
+})
+
 # Парсеры для параметров запроса
 list_parser = reqparse.RequestParser()
 list_parser.add_argument('page', type=int, default=1, help='Номер страницы')
@@ -155,4 +161,13 @@ class AllDocuments(Resource):
     @ns.marshal_with(documents_list_model)
     def get(self):
         """Получить все документы без пагинации"""
+        pass
+
+@ns.route('/bulk-create')
+class BulkCreateDocuments(Resource):
+    @ns.doc('bulk_create_documents')
+    @ns.expect([document_model])
+    @ns.marshal_with(bulk_create_model, code=201)
+    def post(self):
+        """Массовое создание или обновление документов"""
         pass 
