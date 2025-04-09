@@ -5,6 +5,10 @@ from config import Config
 from sqlalchemy import inspect
 from logging_config import configure_logging
 from api_docs import api_bp
+from flask_restx import Api
+from routes.iko_document_routes import document_bp, api as document_api
+from routes.iko_check_routes import check_bp, api as check_api
+from flask_migrate import Migrate
 
 def create_app(config_class=Config):
     app = Flask(__name__)
@@ -18,6 +22,7 @@ def create_app(config_class=Config):
 
     # Initialize extensions
     db.init_app(app)
+    migrate = Migrate(app, db)
 
     # Перезагрузка модулей для уверенности в актуальности данных
     import importlib
@@ -28,6 +33,22 @@ def create_app(config_class=Config):
     # Register blueprints - важно, статические маршруты регистрируются перед динамическими
     app.register_blueprint(iko_bp, url_prefix='/api/v1')
     app.register_blueprint(api_bp)
+    
+    # Создаем основной API
+    api = Api(
+        app,
+        version='1.0',
+        title='IKO API',
+        description='API для работы с документами и чеками'
+    )
+
+    # Регистрируем Blueprint'ы
+    app.register_blueprint(document_bp, url_prefix='/api')
+    app.register_blueprint(check_bp, url_prefix='/api')
+
+    # Добавляем Namespace'ы в API
+    api.add_namespace(document_api)
+    api.add_namespace(check_api)
     
     # Импортируем health_bp
     try:

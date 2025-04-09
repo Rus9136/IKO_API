@@ -147,7 +147,7 @@ class Document(Resource):
 @ns.route('/bulk-process')
 class BulkProcess(Resource):
     @ns.doc('bulk_process_documents')
-    @ns.expect(bulk_update_model)
+    @ns.expect(bulk_update_model) 
     @ns.marshal_with(documents_list_model)
     def post(self):
         """Массовое обновление статуса обработки документов"""
@@ -155,7 +155,7 @@ class BulkProcess(Resource):
 
 @ns.route('/statistics')
 class Statistics(Resource):
-    @ns.doc('get_statistics')
+    @ns.doc('get_statistivfncs')
     @ns.marshal_with(statistics_model)
     def get(self):
         """Получить статистику по документам"""
