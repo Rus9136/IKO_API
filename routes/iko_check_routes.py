@@ -7,16 +7,10 @@ from datetime import datetime
 check_bp = Blueprint('checks', __name__)
 
 # Создаем Namespace для Swagger документации
-api = Namespace('checks', description='Операции с чеками')
+check_api = Namespace('checks', description='Операции с чеками')
 
 # Определяем модели для Swagger
-check_item = api.model('CheckItem', {
-    'name': fields.String(required=True, description='Название товара'),
-    'quantity': fields.Float(required=True, description='Количество'),
-    'price': fields.Float(required=True, description='Цена')
-})
-
-check_model = api.model('Check', {
+check_model = check_api.model('Check', {
     'cash_register_name': fields.String(required=True, description='Название кассы'),
     'cash_register_serial_number': fields.String(required=True, description='Серийный номер кассы'),
     'cash_register_number': fields.Integer(required=True, description='Номер кассы'),
@@ -41,13 +35,13 @@ check_model = api.model('Check', {
     'increase_type': fields.String(description='Тип увеличения')
 })
 
-@api.route('/')
+@check_api.route('/')
 class CheckList(Resource):
-    @api.doc('list_checks')
-    @api.param('page', 'Номер страницы', type=int, default=1)
-    @api.param('per_page', 'Количество чеков на странице', type=int, default=20)
-    @api.param('start_date', 'Начальная дата (YYYY-MM-DD)')
-    @api.param('end_date', 'Конечная дата (YYYY-MM-DD)')
+    @check_api.doc('list_checks')
+    @check_api.param('page', 'Номер страницы', type=int, default=1)
+    @check_api.param('per_page', 'Количество чеков на странице', type=int, default=20)
+    @check_api.param('start_date', 'Начальная дата (YYYY-MM-DD)')
+    @check_api.param('end_date', 'Конечная дата (YYYY-MM-DD)')
     def get(self):
         """Получение списка чеков"""
         page = request.args.get('page', 1, type=int)
@@ -62,28 +56,28 @@ class CheckList(Resource):
             
         return IKOCheckService.get_checks(page, per_page, start_date, end_date)
 
-    @api.doc('create_check')
-    @api.expect(check_model)
+    @check_api.doc('create_check')
+    @check_api.expect(check_model)
     def post(self):
         """Создание нового чека"""
         data = request.get_json()
         return IKOCheckService.create_check(data)
 
-@api.route('/<int:check_id>')
+@check_api.route('/<int:check_id>')
 class Check(Resource):
-    @api.doc('get_check')
+    @check_api.doc('get_check')
     def get(self, check_id):
         """Получение чека по ID"""
         check = IKOCheckService.get_check_by_id(check_id)
         if not check:
-            api.abort(404, f"Чек с ID {check_id} не найден")
+            check_api.abort(404, f"Чек с ID {check_id} не найден")
         return check
 
-@api.route('/statistics')
+@check_api.route('/statistics')
 class CheckStatistics(Resource):
-    @api.doc('get_statistics')
-    @api.param('start_date', 'Начальная дата (YYYY-MM-DD)')
-    @api.param('end_date', 'Конечная дата (YYYY-MM-DD)')
+    @check_api.doc('get_statistics')
+    @check_api.param('start_date', 'Начальная дата (YYYY-MM-DD)')
+    @check_api.param('end_date', 'Конечная дата (YYYY-MM-DD)')
     def get(self):
         """Получение статистики по чекам"""
         start_date = request.args.get('start_date')

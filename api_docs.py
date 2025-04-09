@@ -1,16 +1,24 @@
 from flask_restx import Api, Resource, fields, reqparse
 from flask import Blueprint
 from datetime import date
+from routes.iko_document_routes import document_api
+from routes.iko_check_routes import check_api
 
 # Создаем Blueprint для API документации
 api_bp = Blueprint('api', __name__)
-api = Api(api_bp,
-    title='IKO Documents API',
+
+# Создаем API с Swagger документацией
+api = Api(
+    api_bp,
     version='1.0',
-    description='API для работы с документами IKO',
-    doc='/',
-    prefix='/docs'
+    title='IKO API',
+    description='API для работы с документами и чеками',
+    doc='/docs'
 )
+
+# Добавляем Namespace'ы
+api.add_namespace(document_api)
+api.add_namespace(check_api)
 
 # Определяем пространство имен
 ns = api.namespace('api/v1/documents', description='Операции с документами')

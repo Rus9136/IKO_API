@@ -4,10 +4,6 @@ from models.iko_document import db
 from config import Config
 from sqlalchemy import inspect
 from logging_config import configure_logging
-from api_docs import api_bp
-from flask_restx import Api
-from routes.iko_document_routes import document_bp, api as document_api
-from routes.iko_check_routes import check_bp, api as check_api
 from flask_migrate import Migrate
 
 def create_app(config_class=Config):
@@ -24,38 +20,15 @@ def create_app(config_class=Config):
     db.init_app(app)
     migrate = Migrate(app, db)
 
-    # Перезагрузка модулей для уверенности в актуальности данных
-    import importlib
-    import routes.iko_document_routes
-    importlib.reload(routes.iko_document_routes)
-    from routes.iko_document_routes import bp as iko_bp
+    # Импортируем и регистрируем маршруты
+    from routes.iko_document_routes import document_bp
+    from routes.iko_check_routes import check_bp
+    from api_docs import api_bp
 
-    # Register blueprints - важно, статические маршруты регистрируются перед динамическими
-    app.register_blueprint(iko_bp, url_prefix='/api/v1')
-    app.register_blueprint(api_bp)
-    
-    # Создаем основной API
-    api = Api(
-        app,
-        version='1.0',
-        title='IKO API',
-        description='API для работы с документами и чеками'
-    )
-
-    # Регистрируем Blueprint'ы
+    # Register blueprints
     app.register_blueprint(document_bp, url_prefix='/api')
     app.register_blueprint(check_bp, url_prefix='/api')
-
-    # Добавляем Namespace'ы в API
-    api.add_namespace(document_api)
-    api.add_namespace(check_api)
-    
-    # Импортируем health_bp
-    try:
-        from routes.health import health_bp
-        app.register_blueprint(health_bp)
-    except ImportError as e:
-        app.logger.error(f"Не удалось импортировать health_bp: {e}")
+    app.register_blueprint(api_bp)
 
     # Redirect root to docs
     @app.route('/')
@@ -65,7 +38,7 @@ def create_app(config_class=Config):
     # Create database tables только если они не существуют
     with app.app_context():
         inspector = inspect(db.engine)
-        if not inspector.has_table('iko_documents'):
+        if not inspector.has_table('sales_receipts'):
             app.logger.info("Создание таблиц базы данных")
             db.create_all()
         else:

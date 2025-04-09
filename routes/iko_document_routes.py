@@ -5,6 +5,24 @@ from schemas.iko_document_schema import iko_document_schema, iko_documents_schem
 from config import Config
 from datetime import datetime
 import logging
+from flask import Blueprint
+from flask_restx import Resource, Namespace, fields
+
+# Создаем Blueprint для маршрутов документов
+document_bp = Blueprint('documents', __name__)
+
+# Создаем Namespace для Swagger документации
+document_api = Namespace('documents', description='Операции с документами')
+
+# Определяем модели для Swagger
+document_model = document_api.model('Document', {
+    'id': fields.Integer(readonly=True, description='ID документа'),
+    'name': fields.String(required=True, description='Название документа'),
+    'content': fields.String(required=True, description='Содержимое документа'),
+    'created_at': fields.DateTime(readonly=True, description='Дата создания'),
+    'updated_at': fields.DateTime(readonly=True, description='Дата обновления'),
+    'is_processed': fields.Boolean(description='Статус обработки')
+})
 
 # Настройка логирования
 logging.basicConfig(level=logging.DEBUG)
@@ -188,18 +206,6 @@ def delete_document(document_id):
     except Exception as e:
         response = jsonify({"message": "An error occurred", "error": str(e)})
         return add_cors_headers(response), 500
-    if request.method == 'OPTIONS':
-        response = make_response()
-        return add_cors_headers(response)
-    
-    try:
-        data = request.json
-        return jsonify({
-            "received_data": data,
-            "data_type": str(type(data))
-        })
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
 
 @bp.route('/documents/bulk-process', methods=['POST', 'OPTIONS'])
 def bulk_process_documents():
@@ -413,3 +419,58 @@ def bulk_delete_documents():
             "error": str(e)
         })
         return add_cors_headers(response), 500
+
+@document_api.route('/')
+class DocumentList(Resource):
+    @document_api.doc('list_documents')
+    @document_api.param('page', 'Номер страницы', type=int, default=1)
+    @document_api.param('per_page', 'Количество документов на странице', type=int, default=20)
+    @document_api.param('start_date', 'Начальная дата (YYYY-MM-DD)')
+    @document_api.param('end_date', 'Конечная дата (YYYY-MM-DD)')
+    def get(self):
+        """Получение списка документов"""
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 20, type=int)
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+        
+        if start_date:
+            start_date = datetime.strptime(start_date, '%Y-%m-%d')
+        if end_date:
+            end_date = datetime.strptime(end_date, '%Y-%m-%d')
+            
+        return IKODocumentService.get_documents(page, per_page, start_date, end_date)
+
+    @document_api.doc('create_document')
+    @document_api.expect(document_model)
+    def post(self):
+        """Создание нового документа"""
+        data = request.get_json()
+        return IKODocumentService.create_document(data)
+
+@document_api.route('/<int:document_id>')
+class Document(Resource):
+    @document_api.doc('get_document')
+    def get(self, document_id):
+        """Получение документа по ID"""
+        document = IKODocumentService.get_document_by_id(document_id)
+        if not document:
+            document_api.abort(404, f"Документ с ID {document_id} не найден")
+        return document
+
+@document_api.route('/statistics')
+class DocumentStatistics(Resource):
+    @document_api.doc('get_statistics')
+    @document_api.param('start_date', 'Начальная дата (YYYY-MM-DD)')
+    @document_api.param('end_date', 'Конечная дата (YYYY-MM-DD)')
+    def get(self):
+        """Получение статистики по документам"""
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+        
+        if start_date:
+            start_date = datetime.strptime(start_date, '%Y-%m-%d')
+        if end_date:
+            end_date = datetime.strptime(end_date, '%Y-%m-%d')
+            
+        return IKODocumentService.get_statistics(start_date, end_date)
