@@ -374,3 +374,42 @@ def test_bulk_create():
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@bp.route('/documents/bulk-delete', methods=['POST', 'OPTIONS'])
+def bulk_delete_documents():
+    if request.method == 'OPTIONS':
+        response = make_response()
+        return add_cors_headers(response)
+        
+    try:
+        data = request.json
+        if not data or 'document_ids' not in data:
+            response = jsonify({
+                "message": "document_ids is required",
+                "error": "Missing required field"
+            })
+            return add_cors_headers(response), 400
+            
+        document_ids = data['document_ids']
+        if not isinstance(document_ids, list):
+            response = jsonify({
+                "message": "document_ids must be an array",
+                "error": "Invalid data type"
+            })
+            return add_cors_headers(response), 400
+            
+        deleted_count = IKODocumentService.bulk_delete_documents(document_ids)
+        
+        response = jsonify({
+            "message": "Documents deleted successfully",
+            "deleted_count": deleted_count
+        })
+        return add_cors_headers(response)
+        
+    except Exception as e:
+        logger.error(f"Error in bulk delete: {str(e)}", exc_info=True)
+        response = jsonify({
+            "message": "An error occurred while deleting documents",
+            "error": str(e)
+        })
+        return add_cors_headers(response), 500

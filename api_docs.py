@@ -77,6 +77,12 @@ bulk_create_model = api.model('BulkCreate', {
     'total': fields.Integer(description='Общее количество обработанных документов')
 })
 
+# Модель для массового удаления документов
+bulk_delete_model = api.model('BulkDelete', {
+    'message': fields.String(description='Сообщение о результате операции'),
+    'deleted_count': fields.Integer(description='Количество удаленных документов')
+})
+
 # Парсеры для параметров запроса
 list_parser = reqparse.RequestParser()
 list_parser.add_argument('page', type=int, default=1, help='Номер страницы')
@@ -222,3 +228,18 @@ class BulkCreateDocuments(Resource):
                 "message": "An error occurred while processing documents",
                 "error": str(e)
             }, 500
+
+@ns.route('/bulk-delete')
+class BulkDeleteDocuments(Resource):
+    @ns.doc('bulk_delete_documents',
+            description='Массовое удаление документов по списку ID',
+            responses={
+                200: 'Документы успешно удалены',
+                400: 'Ошибка валидации данных',
+                500: 'Внутренняя ошибка сервера'
+            })
+    @ns.expect(bulk_get_model)
+    @ns.marshal_with(bulk_delete_model)
+    def post(self):
+        """Массовое удаление документов"""
+        pass

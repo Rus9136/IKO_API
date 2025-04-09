@@ -199,3 +199,10 @@ class IKODocumentService:
                     pass
 
         return query.order_by(IKODocument.created_at.desc()).all()
+
+    @staticmethod
+    def bulk_delete_documents(document_ids: List[int]) -> int:
+        """Массовое удаление документов по списку ID"""
+        deleted_count = IKODocument.query.filter(IKODocument.id.in_(document_ids)).delete(synchronize_session=False)
+        db.session.commit()
+        return deleted_count
