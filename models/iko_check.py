@@ -1,5 +1,5 @@
 from datetime import datetime
-from models import db
+from models.iko_document import db
 import uuid
 
 class IKOCheck(db.Model):

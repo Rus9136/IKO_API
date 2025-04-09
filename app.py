@@ -23,11 +23,13 @@ def create_app(config_class=Config):
     # Импортируем и регистрируем маршруты
     from routes.iko_document_routes import document_bp
     from routes.iko_check_routes import check_bp
+    from routes.health import health_bp
     from api_docs import api_bp
 
     # Register blueprints
     app.register_blueprint(document_bp, url_prefix='/api')
     app.register_blueprint(check_bp, url_prefix='/api')
+    app.register_blueprint(health_bp, url_prefix='/api')
     app.register_blueprint(api_bp)
 
     # Redirect root to docs
@@ -36,13 +38,24 @@ def create_app(config_class=Config):
         return redirect('/docs')
 
     # Create database tables только если они не существуют
-    with app.app_context():
-        inspector = inspect(db.engine)
-        if not inspector.has_table('sales_receipts'):
-            app.logger.info("Создание таблиц базы данных")
-            db.create_all()
+    try:
+        # Проверим, используется ли SQLite или PostgreSQL
+        db_url = app.config['SQLALCHEMY_DATABASE_URI']
+        if 'sqlite' in db_url:
+            app.logger.info(f"Используется SQLite: {db_url}")
         else:
-            app.logger.info("Таблицы уже существуют, пропускаем создание")
+            app.logger.info(f"Используется PostgreSQL: {db_url}")
+            
+        with app.app_context():
+            inspector = inspect(db.engine)
+            if not inspector.has_table('sales_receipts'):
+                app.logger.info("Создание таблиц базы данных")
+                db.create_all()
+            else:
+                app.logger.info("Таблицы уже существуют, пропускаем создание")
+    except Exception as e:
+        app.logger.error(f"Ошибка подключения к базе данных: {str(e)}")
+        app.logger.warning("Запуск приложения без подключения к базе данных. Функциональность будет ограничена.")
     
     # Вывод всех зарегистрированных маршрутов для отладки
     app.logger.info("Зарегистрированные маршруты:")

@@ -2,7 +2,7 @@ from models.iko_check import IKOCheck
 from schemas.iko_check_schema import iko_check_schema, iko_checks_schema
 from datetime import datetime
 from sqlalchemy import func
-from models import db
+from models.iko_document import db
 
 class IKOCheckService:
     @staticmethod

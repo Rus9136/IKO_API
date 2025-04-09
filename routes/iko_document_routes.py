@@ -28,15 +28,13 @@ document_model = document_api.model('Document', {
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-bp = Blueprint('iko_documents', __name__)
-
 def add_cors_headers(response):
     response.headers['Access-Control-Allow-Origin'] = '*'
     response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
     response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
     return response
 
-@bp.route('/documents/bulk-create', methods=['POST', 'OPTIONS'], endpoint='bulk_create_docs')
+@document_bp.route('/documents/bulk-create', methods=['POST', 'OPTIONS'], endpoint='bulk_create_docs')
 def bulk_create_documents_handler():
     if request.method == 'OPTIONS':
         response = make_response()
@@ -84,7 +82,7 @@ def bulk_create_documents_handler():
         })
         return add_cors_headers(response), 500
 
-@bp.route('/documents', methods=['POST', 'OPTIONS'])
+@document_bp.route('/documents', methods=['POST', 'OPTIONS'])
 def create_document():
     if request.method == 'OPTIONS':
         response = make_response()
@@ -107,7 +105,7 @@ def create_document():
         response = jsonify({"message": "An error occurred", "error": str(e)})
         return add_cors_headers(response), 500
 
-@bp.route('/documents', methods=['GET', 'OPTIONS'])
+@document_bp.route('/documents', methods=['GET', 'OPTIONS'])
 def get_documents():
     if request.method == 'OPTIONS':
         response = make_response()
@@ -146,7 +144,7 @@ def get_documents():
         response = jsonify({"message": "An error occurred", "error": str(e)})
         return add_cors_headers(response), 500
 
-@bp.route('/documents/test', methods=['POST', 'OPTIONS'])
+@document_bp.route('/documents/test', methods=['POST', 'OPTIONS'])
 def test_endpoint():
     if request.method == 'OPTIONS':
         response = make_response()
@@ -161,7 +159,7 @@ def test_endpoint():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@bp.route('/documents/<int:document_id>', methods=['GET', 'OPTIONS'])
+@document_bp.route('/documents/<int:document_id>', methods=['GET', 'OPTIONS'])
 def get_document(document_id):
     if request.method == 'OPTIONS':
         response = make_response()
@@ -175,7 +173,7 @@ def get_document(document_id):
         response = jsonify({"message": "An error occurred", "error": str(e)})
         return add_cors_headers(response), 500
 
-@bp.route('/documents/<int:document_id>', methods=['PUT', 'OPTIONS'])
+@document_bp.route('/documents/<int:document_id>', methods=['PUT', 'OPTIONS'])
 def update_document(document_id):
     if request.method == 'OPTIONS':
         response = make_response()
@@ -193,7 +191,7 @@ def update_document(document_id):
         response = jsonify({"message": "An error occurred", "error": str(e)})
         return add_cors_headers(response), 500
 
-@bp.route('/documents/<int:document_id>', methods=['DELETE', 'OPTIONS'])
+@document_bp.route('/documents/<int:document_id>', methods=['DELETE', 'OPTIONS'])
 def delete_document(document_id):
     if request.method == 'OPTIONS':
         response = make_response()
@@ -207,7 +205,7 @@ def delete_document(document_id):
         response = jsonify({"message": "An error occurred", "error": str(e)})
         return add_cors_headers(response), 500
 
-@bp.route('/documents/bulk-process', methods=['POST', 'OPTIONS'])
+@document_bp.route('/documents/bulk-process', methods=['POST', 'OPTIONS'])
 def bulk_process_documents():
     if request.method == 'OPTIONS':
         response = make_response()
@@ -232,7 +230,7 @@ def bulk_process_documents():
         response = jsonify({"message": "An error occurred", "error": str(e)})
         return add_cors_headers(response), 500
 
-@bp.route('/documents/statistics', methods=['GET', 'OPTIONS'])
+@document_bp.route('/documents/statistics', methods=['GET', 'OPTIONS'])
 def get_statistics():
     if request.method == 'OPTIONS':
         response = make_response()
@@ -246,7 +244,7 @@ def get_statistics():
         response = jsonify({"message": "An error occurred", "error": str(e)})
         return add_cors_headers(response), 500
 
-@bp.route('/documents/by-date-range', methods=['GET', 'OPTIONS'])
+@document_bp.route('/documents/by-date-range', methods=['GET', 'OPTIONS'])
 def get_documents_by_date_range():
     if request.method == 'OPTIONS':
         response = make_response()
@@ -277,7 +275,7 @@ def get_documents_by_date_range():
         response = jsonify({"message": "An error occurred", "error": str(e)})
         return add_cors_headers(response), 500
 
-@bp.route('/documents/bulk', methods=['POST', 'OPTIONS'])
+@document_bp.route('/documents/bulk', methods=['POST', 'OPTIONS'])
 def get_documents_bulk():
     if request.method == 'OPTIONS':
         response = make_response()
@@ -305,7 +303,7 @@ def get_documents_bulk():
         response = jsonify({"message": "An error occurred", "error": str(e)})
         return add_cors_headers(response), 500
 
-@bp.route('/documents/all', methods=['GET', 'OPTIONS'])
+@document_bp.route('/documents/all', methods=['GET', 'OPTIONS'])
 def get_all_documents():
     if request.method == 'OPTIONS':
         response = make_response()
@@ -340,7 +338,7 @@ def get_all_documents():
         return add_cors_headers(response), 500
 
 
-@bp.route('/documents/test-bulk-create', methods=['GET', 'OPTIONS'])
+@document_bp.route('/documents/test-bulk-create', methods=['GET', 'OPTIONS'])
 def test_bulk_create():
     if request.method == 'OPTIONS':
         response = make_response()
@@ -381,7 +379,7 @@ def test_bulk_create():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@bp.route('/documents/bulk-delete', methods=['POST', 'OPTIONS'])
+@document_bp.route('/documents/bulk-delete', methods=['POST', 'OPTIONS'])
 def bulk_delete_documents():
     if request.method == 'OPTIONS':
         response = make_response()
